@@ -19,6 +19,7 @@ public class MainActivity extends Activity {
 
     private TextView eventLog;
     private EventLogger logger;
+    private EventClassifier classifier;
     private int eventCount = 0;
 
     @Override
@@ -26,6 +27,7 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
 
         logger = new EventLogger(this);
+        classifier = new EventClassifier();
 
         LinearLayout root = new LinearLayout(this);
         root.setOrientation(LinearLayout.VERTICAL);
@@ -63,7 +65,7 @@ public class MainActivity extends Activity {
         root.addView(testButton);
 
         TextView logTitle = new TextView(this);
-        logTitle.setText("EVENT LOG");
+        logTitle.setText("EVENT CLASSIFICATION LOG");
         logTitle.setTextColor(0xFFFFFFFF);
         logTitle.setTypeface(null, Typeface.BOLD);
         logTitle.setPadding(0, 24, 0, 12);
@@ -80,17 +82,36 @@ public class MainActivity extends Activity {
     private void generateTestEvent() {
         eventCount++;
 
+        String[] testTypes = {
+                "NORMAL_HEARTBEAT",
+                "DUPLICATE_EVENT",
+                "INVALID_SEQUENCE",
+                "UNKNOWN_EVENT"
+        };
+
+        String eventType = testTypes[(eventCount - 1) % testTypes.length];
+
+        EventClassifier.Result result =
+                classifier.classify(eventType);
+
+        String description =
+                classifier.getDescription(result);
+
         String time = new SimpleDateFormat(
                 "HH:mm:ss", Locale.getDefault()
         ).format(new Date());
 
-        String event = "SYNTHETIC_TEST_EVENT_" + eventCount
+        String event = eventType
+                + " | Classification: " + description
                 + " | Source: Local Simulator";
 
         boolean saved = logger.log(event);
 
-        eventLog.append("[" + time + "] " + event
-                + (saved ? " | SAVED\n" : " | SAVE FAILED\n"));
+        eventLog.append(
+                "[" + time + "] "
+                + event
+                + (saved ? " | SAVED\n" : " | SAVE FAILED\n")
+        );
     }
 
     private void loadSavedLogs() {

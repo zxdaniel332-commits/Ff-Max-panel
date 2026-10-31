@@ -3,12 +3,14 @@ package com.kanha.ffpanel;
 import android.app.Activity;
 import android.os.Bundle;
 import android.graphics.Typeface;
-import android.view.Gravity;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
@@ -16,11 +18,14 @@ import java.util.Locale;
 public class MainActivity extends Activity {
 
     private TextView eventLog;
+    private EventLogger logger;
     private int eventCount = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        logger = new EventLogger(this);
 
         LinearLayout root = new LinearLayout(this);
         root.setOrientation(LinearLayout.VERTICAL);
@@ -35,7 +40,6 @@ public class MainActivity extends Activity {
 
         TextView subtitle = new TextView(this);
         subtitle.setText("Synthetic Event Testing Environment");
-        subtitle.setTextSize(14);
         subtitle.setTextColor(0xFFB0BEC5);
 
         Button testButton = new Button(this);
@@ -44,23 +48,19 @@ public class MainActivity extends Activity {
         eventLog = new TextView(this);
         eventLog.setTextColor(0xFF80CBC4);
         eventLog.setTextSize(14);
-        eventLog.setText("Research log initialized.\n");
 
         ScrollView scrollView = new ScrollView(this);
         scrollView.addView(eventLog);
+
+        Button clearButton = new Button(this);
+        clearButton.setText("Clear Screen Log");
+        clearButton.setOnClickListener(v -> eventLog.setText(""));
 
         testButton.setOnClickListener(v -> generateTestEvent());
 
         root.addView(title);
         root.addView(subtitle);
-
-        LinearLayout.LayoutParams buttonParams =
-                new LinearLayout.LayoutParams(
-                        LinearLayout.LayoutParams.MATCH_PARENT,
-                        LinearLayout.LayoutParams.WRAP_CONTENT
-                );
-        buttonParams.topMargin = 24;
-        root.addView(testButton, buttonParams);
+        root.addView(testButton);
 
         TextView logTitle = new TextView(this);
         logTitle.setText("EVENT LOG");
@@ -70,8 +70,11 @@ public class MainActivity extends Activity {
 
         root.addView(logTitle);
         root.addView(scrollView);
+        root.addView(clearButton);
 
         setContentView(root);
+
+        loadSavedLogs();
     }
 
     private void generateTestEvent() {
@@ -81,11 +84,27 @@ public class MainActivity extends Activity {
                 "HH:mm:ss", Locale.getDefault()
         ).format(new Date());
 
-        String event = "[" + time + "] "
-                + "SYNTHETIC_TEST_EVENT_"
-                + eventCount
-                + " | Source: Local Simulator\n";
+        String event = "SYNTHETIC_TEST_EVENT_" + eventCount
+                + " | Source: Local Simulator";
 
-        eventLog.append(event);
+        boolean saved = logger.log(event);
+
+        eventLog.append("[" + time + "] " + event
+                + (saved ? " | SAVED\n" : " | SAVE FAILED\n"));
+    }
+
+    private void loadSavedLogs() {
+        try (BufferedReader reader = new BufferedReader(
+                new FileReader(logger.getLogFile()))) {
+
+            String line;
+
+            while ((line = reader.readLine()) != null) {
+                eventLog.append(line + "\n");
+            }
+
+        } catch (IOException exception) {
+            eventLog.append("No previous logs available.\n");
+        }
     }
 }

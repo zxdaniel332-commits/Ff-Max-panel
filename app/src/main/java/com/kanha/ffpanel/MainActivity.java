@@ -18,8 +18,12 @@ import java.util.Locale;
 public class MainActivity extends Activity {
 
     private TextView eventLog;
+    private TextView summaryView;
+
     private EventLogger logger;
     private EventClassifier classifier;
+    private TestSummary summary;
+
     private int eventCount = 0;
 
     @Override
@@ -28,6 +32,7 @@ public class MainActivity extends Activity {
 
         logger = new EventLogger(this);
         classifier = new EventClassifier();
+        summary = new TestSummary();
 
         LinearLayout root = new LinearLayout(this);
         root.setOrientation(LinearLayout.VERTICAL);
@@ -47,6 +52,11 @@ public class MainActivity extends Activity {
         Button testButton = new Button(this);
         testButton.setText("Generate Test Event");
 
+        summaryView = new TextView(this);
+        summaryView.setTextColor(0xFFFFFFFF);
+        summaryView.setTextSize(16);
+        summaryView.setPadding(0, 20, 0, 20);
+
         eventLog = new TextView(this);
         eventLog.setTextColor(0xFF80CBC4);
         eventLog.setTextSize(14);
@@ -63,12 +73,13 @@ public class MainActivity extends Activity {
         root.addView(title);
         root.addView(subtitle);
         root.addView(testButton);
+        root.addView(summaryView);
 
         TextView logTitle = new TextView(this);
         logTitle.setText("EVENT CLASSIFICATION LOG");
         logTitle.setTextColor(0xFFFFFFFF);
         logTitle.setTypeface(null, Typeface.BOLD);
-        logTitle.setPadding(0, 24, 0, 12);
+        logTitle.setPadding(0, 12, 0, 12);
 
         root.addView(logTitle);
         root.addView(scrollView);
@@ -76,6 +87,7 @@ public class MainActivity extends Activity {
 
         setContentView(root);
 
+        updateSummary();
         loadSavedLogs();
     }
 
@@ -89,10 +101,14 @@ public class MainActivity extends Activity {
                 "UNKNOWN_EVENT"
         };
 
-        String eventType = testTypes[(eventCount - 1) % testTypes.length];
+        String eventType =
+                testTypes[(eventCount - 1) % testTypes.length];
 
         EventClassifier.Result result =
                 classifier.classify(eventType);
+
+        summary.record(result);
+        updateSummary();
 
         String description =
                 classifier.getDescription(result);
@@ -112,6 +128,10 @@ public class MainActivity extends Activity {
                 + event
                 + (saved ? " | SAVED\n" : " | SAVE FAILED\n")
         );
+    }
+
+    private void updateSummary() {
+        summaryView.setText(summary.getReport());
     }
 
     private void loadSavedLogs() {

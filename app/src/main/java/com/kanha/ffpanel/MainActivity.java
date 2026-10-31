@@ -1,0 +1,91 @@
+package com.kanha.ffpanel;
+
+import android.app.Activity;
+import android.os.Bundle;
+import android.graphics.Typeface;
+import android.view.Gravity;
+import android.widget.Button;
+import android.widget.LinearLayout;
+import android.widget.ScrollView;
+import android.widget.TextView;
+
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
+
+public class MainActivity extends Activity {
+
+    private TextView eventLog;
+    private int eventCount = 0;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        LinearLayout root = new LinearLayout(this);
+        root.setOrientation(LinearLayout.VERTICAL);
+        root.setPadding(24, 32, 24, 24);
+        root.setBackgroundColor(0xFF101820);
+
+        TextView title = new TextView(this);
+        title.setText("Anti-Cheat Research Lab");
+        title.setTextSize(24);
+        title.setTypeface(null, Typeface.BOLD);
+        title.setTextColor(0xFFFFFFFF);
+
+        TextView subtitle = new TextView(this);
+        subtitle.setText("Synthetic Event Testing Environment");
+        subtitle.setTextSize(14);
+        subtitle.setTextColor(0xFFB0BEC5);
+
+        Button testButton = new Button(this);
+        testButton.setText("Generate Test Event");
+
+        eventLog = new TextView(this);
+        eventLog.setTextColor(0xFF80CBC4);
+        eventLog.setTextSize(14);
+        eventLog.setText("Research log initialized.\n");
+
+        ScrollView scrollView = new ScrollView(this);
+        scrollView.addView(eventLog);
+
+        testButton.setOnClickListener(v -> generateTestEvent());
+
+        root.addView(title);
+        root.addView(subtitle);
+
+        LinearLayout.LayoutParams buttonParams =
+                new LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        LinearLayout.LayoutParams.WRAP_CONTENT
+                );
+        buttonParams.topMargin = 24;
+        root.addView(testButton, buttonParams);
+
+        TextView logTitle = new TextView(this);
+        logTitle.setText("EVENT LOG");
+        logTitle.setTextColor(0xFFFFFFFF);
+        logTitle.setTypeface(null, Typeface.BOLD);
+        logTitle.setPadding(0, 24, 0, 12);
+
+        root.addView(logTitle);
+        root.addView(scrollView);
+
+        setContentView(root);
+    }
+
+    private void generateTestEvent() {
+        eventCount++;
+
+        String time = new SimpleDateFormat(
+                "HH:mm:ss", Locale.getDefault()
+        ).format(new Date());
+
+        String event = "[" + time + "] "
+                + "SYNTHETIC_TEST_EVENT_"
+                + eventCount
+                + " | Source: Local Simulator\n";
+
+        eventLog.append(event);
+    }
+}
